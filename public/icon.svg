@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="tileGrad" x1="0" y1="0" x2="0" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FBF9F5"/>
+      <stop offset="1" stop-color="#EDE9DF"/>
+    </linearGradient>
+    <linearGradient id="stillLeafGrad" x1="20" y1="12" x2="48" y2="52" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5E8362"/>
+      <stop offset="1" stop-color="#4D6B50"/>
+    </linearGradient>
+    <linearGradient id="stillInnerGrad" x1="28" y1="18" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6F9473" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#466049" stop-opacity="0.6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Tile with subtle sage border -->
+  <rect width="512" height="512" rx="128" fill="url(#tileGrad)"/>
+  <rect x="12" y="12" width="488" height="488" rx="116" stroke="#6F9473" stroke-width="6" stroke-opacity="0.25"/>
+
+  <!-- Brandmark Artwork scaled 8x from 64x64 grid -->
+  <g transform="scale(8)">
+    <!-- Outer Harmonic Wave -->
+    <circle cx="32" cy="32" r="27" stroke="#6F9473" stroke-width="1.25" stroke-opacity="0.28" stroke-dasharray="3 3.5"/>
+    <!-- Inner Ripple Wave -->
+    <circle cx="32" cy="32" r="20.5" stroke="#6F9473" stroke-width="1.25" stroke-opacity="0.45"/>
+    <!-- Primary Botanical Sprout -->
+    <path d="M32 11C20.5 21.5 17.5 35 28.5 45.5C31.5 38.5 30.5 27 32 11Z" fill="url(#stillLeafGrad)"/>
+    <!-- Secondary Balanced Petal -->
+    <path d="M32 17.5C41 24.5 43.5 36.5 34.5 44.5C33.5 36.5 35 27.5 32 17.5Z" fill="url(#stillInnerGrad)"/>
+    <!-- Serene Dewdrop Apex -->
+    <circle cx="32" cy="8.5" r="2.3" fill="#5E8362"/>
+    <!-- Grounding Base Pebble -->
+    <circle cx="32" cy="49.5" r="1.6" fill="#5E8362" fill-opacity="0.65"/>
+  </g>
+</svg>
