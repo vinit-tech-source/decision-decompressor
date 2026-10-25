@@ -1,6 +1,0 @@
-{
-  "name": "Still",
-  "description": "One gentle thing, then it forgets you. A calm decision decompressor for days when you cannot plan.",
-  "requestFramePermissions": ["microphone"],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
