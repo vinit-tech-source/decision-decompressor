@@ -37,25 +37,6 @@
     --btn-disabled-text: #D6D3D1;
   }
 
-  @media (prefers-color-scheme: dark) {
-    :root:not(.light):not([data-theme="light"]) {
-      --bg-page: #1A1817;
-      --text-ink: #EBE7DF;
-      --accent-sage: #8FB394;
-      --accent-sage-hover: #A2C4A7;
-      --accent-sage-active: #78997C;
-      --border-clay: #33302E;
-      --card-bg: #242120;
-      --subtle-ink: #C5C1B8;
-      --dim-text: #A8A29A;
-      --input-bg: #242120;
-      --card-border: #33302E;
-      --focus-ring: #8FB394;
-      --placeholder-color: #D6D3D1;
-      --btn-disabled-bg: #312E2D;
-      --btn-disabled-text: #D6D3D1;
-    }
-  }
 
   html, body {
     min-height: 100dvh;

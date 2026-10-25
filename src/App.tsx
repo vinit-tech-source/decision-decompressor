@@ -226,14 +226,11 @@ export default function App() {
 
 
 
-  // Dark/Light mode state
+  // Dark/Light mode state: default to 'light'
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {
       const saved = localStorage.getItem(THEME_KEY);
       if (saved === 'dark' || saved === 'light') return saved;
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark';
-      }
     } catch {
       // Fallback
     }
@@ -974,7 +971,7 @@ export default function App() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-12 items-start">
             {/* Left Companion Column on Laptop View */}
-            <aside className="hidden lg:flex lg:col-span-5 flex-col space-y-5 sticky top-6">
+            <aside className="hidden lg:flex lg:col-span-5 flex-col space-y-5">
               {/* Ambient Clock in Companion panel */}
               {settings.enableAmbientClock && (
                 <div className="rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)]/80 p-5 shadow-xs">
