@@ -38,9 +38,12 @@ export function InputState({
   const [isListening, setIsListening] = useState<boolean>(false);
   const [speechNotice, setSpeechNotice] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
+  const isListeningRef = useRef<boolean>(false);
+  const [isRequestingMic, setIsRequestingMic] = useState<boolean>(false);
 
   useEffect(() => {
     return () => {
+      isListeningRef.current = false;
       if (recognitionRef.current) {
         try {
           recognitionRef.current.abort();
@@ -54,8 +57,10 @@ export function InputState({
   async function handleToggleVoice() {
     setSpeechNotice(null);
 
-    // If currently listening, stop
-    if (isListening) {
+    // If currently listening, stop immediately
+    if (isListening || isListeningRef.current) {
+      isListeningRef.current = false;
+      setIsListening(false);
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
@@ -63,20 +68,41 @@ export function InputState({
           // ignore
         }
       }
-      setIsListening(false);
       return;
     }
 
-    const SpeechRecognition =
+    const SpeechRecognitionClass =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-    if (!SpeechRecognition) {
-      setSpeechNotice('Voice input is not supported by your browser. You can type directly.');
+    if (!SpeechRecognitionClass) {
+      setSpeechNotice('Voice input is not supported by this browser. Chrome, Edge, and Safari have full voice input support.');
       return;
     }
 
+    // Explicitly request microphone permission first via getUserMedia.
+    // In Chrome, this reliably prompts the browser's native permission modal
+    // ("Allow decision-decompressor to use your microphone").
+    setIsRequestingMic(true);
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Immediately stop all audio tracks to free the mic hardware for SpeechRecognition
+        stream.getTracks().forEach((track) => track.stop());
+      } catch (err: any) {
+        setIsRequestingMic(false);
+        if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
+          setSpeechNotice('Microphone access was blocked. Click the tune/settings icon on the left of your browser address bar to allow Microphone, then try again.');
+          return;
+        } else if (err?.name === 'NotFoundError' || err?.name === 'DevicesNotFoundError') {
+          setSpeechNotice('No microphone found on your device. Please plug in or enable a microphone.');
+          return;
+        }
+      }
+    }
+    setIsRequestingMic(false);
+
     try {
-      const recognition = new SpeechRecognition();
+      const recognition = new SpeechRecognitionClass();
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = navigator.language || 'en-US';
@@ -84,44 +110,49 @@ export function InputState({
       let baseText = dump;
 
       recognition.onstart = () => {
+        isListeningRef.current = true;
         setIsListening(true);
         baseText = dump;
       };
 
       recognition.onresult = (event: any) => {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          transcript += event.results[i][0].transcript;
+        let sessionTranscript = '';
+        for (let i = 0; i < event.results.length; ++i) {
+          sessionTranscript += event.results[i][0].transcript;
         }
 
-        const combined = baseText
-          ? `${baseText.trim()} ${transcript.trim()}`
-          : transcript.trim();
-
-        if (combined.length <= 1000) {
-          onDumpChange(combined);
-        } else {
-          onDumpChange(combined.slice(0, 1000));
-        }
+        const prefix = baseText ? baseText.trim() + ' ' : '';
+        const combined = (prefix + sessionTranscript.trim()).slice(0, 1000);
+        onDumpChange(combined);
       };
 
       recognition.onerror = (event: any) => {
-        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-          setSpeechNotice('Microphone access was denied. You can allow microphone access in your browser address bar (site settings) and click Try again, or type directly.');
-        } else if (event.error !== 'no-speech') {
-          setSpeechNotice('Voice input was interrupted. You can try again or continue typing.');
-        }
+        console.warn('Speech recognition error:', event.error);
+        isListeningRef.current = false;
         setIsListening(false);
+
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          setSpeechNotice('Microphone access was denied. Please allow microphone permission in your address bar (tune/lock icon) and try again.');
+        } else if (event.error === 'audio-capture') {
+          setSpeechNotice('No microphone detected. Please plug in or enable a microphone.');
+        } else if (event.error === 'network') {
+          setSpeechNotice('Voice recognition network issue. Please check your internet connection or try again.');
+        } else if (event.error !== 'no-speech' && event.error !== 'aborted') {
+          setSpeechNotice(`Voice input ended (${event.error}). You can try again or continue typing.`);
+        }
       };
 
       recognition.onend = () => {
+        isListeningRef.current = false;
         setIsListening(false);
       };
 
       recognitionRef.current = recognition;
       recognition.start();
-    } catch {
+    } catch (err) {
+      console.error('Failed to start speech recognition:', err);
       setSpeechNotice('Could not start voice input. You can type directly.');
+      isListeningRef.current = false;
       setIsListening(false);
     }
   }
@@ -202,7 +233,11 @@ export function InputState({
           aria-live="polite"
         >
           <div className="space-y-1">
-            <p className="font-medium text-[var(--text-ink)]">Microphone access needed</p>
+            <p className="font-medium text-[var(--text-ink)]">
+              {speechNotice.includes('denied') || speechNotice.includes('blocked')
+                ? 'Microphone permission needed'
+                : 'Voice typing note'}
+            </p>
             <p className="text-[var(--subtle-ink)]">{speechNotice}</p>
           </div>
           <div className="flex items-center gap-2.5 shrink-0 pt-0.5">
@@ -306,13 +341,17 @@ export function InputState({
                 className={`min-h-[44px] px-3.5 py-2 rounded-md transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 border focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] ${
                   isListening
                     ? 'bg-[var(--accent-sage)] text-white border-[var(--accent-sage)] shadow-xs animate-pulse ring-2 ring-[var(--accent-sage)]/30'
+                    : isRequestingMic
+                    ? 'text-[var(--accent-sage)] bg-[var(--card-bg)] border-[var(--accent-sage)] shadow-xs'
                     : 'text-[var(--text-ink)] bg-[var(--card-bg)] border-[var(--card-border)] hover:border-[var(--accent-sage)]'
                 }`}
                 title={isListening ? 'Stop voice typing' : 'Start voice typing'}
                 aria-label={isListening ? 'Stop voice typing' : 'Start voice typing'}
               >
-                <MicIcon className="w-4 h-4 shrink-0" />
-                <span className="font-medium text-xs">{isListening ? 'Stop' : 'Voice typing'}</span>
+                <MicIcon className={`w-4 h-4 shrink-0 ${isListening ? 'animate-bounce' : ''}`} />
+                <span className="font-medium text-xs">
+                  {isListening ? 'Stop' : isRequestingMic ? 'Accessing mic...' : 'Voice typing'}
+                </span>
               </button>
             )}
 
