@@ -16,7 +16,7 @@ Still takes a raw, messy brain-dump and returns **exactly one small, physical, r
 [![Vite](https://img.shields.io/badge/Vite_8-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
-[Live Demo](#) • [Features](#key-features) • [Architecture](#system-flow--architecture) • [Getting Started](#quick-start) • [Deployment](#deployment) • [Privacy](#privacy--data-ethics)
+[Live Demo](https://decision-decompressor.onrender.com) • [Features](#key-features) • [Architecture](#system-flow--architecture) • [Getting Started](#quick-start) • [Deployment](#deployment) • [Privacy](#privacy--data-ethics)
 
 </div>
 
